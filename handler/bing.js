@@ -41,11 +41,18 @@ async function extractCNSearchResults(page) {
 
 async function fetchCN(page, companyName, flags) {
   console.error(`[I] using Bing`);
-  await page.goto('https://cn.bing.com/');
-  await page.setViewport({width: 1080, height: 1024});
+  while(true) {
+     await page.goto('https://cn.bing.com/');
+     await page.setViewport({width: 1080, height: 1024});
 
-  // ensure CN mode
-  await page.waitForSelector('#est_cn', { timeout: 0 });
+     // ensure CN mode
+     try {
+        await page.waitForSelector('#est_cn', { timeout: 5000 });
+        break;
+     } catch(err) {
+        console.error(`[W] timeout, retry ...`);
+     }
+  }
   const estSwitch = await page.$('#est_cn');
   await estSwitch.click();
   estSwitch.dispose();
