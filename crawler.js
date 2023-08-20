@@ -1,6 +1,5 @@
 const i_fs = require('fs');
 const i_path = require('path');
-const i_url = require('url');
 const i_crypto = require('crypto');
 const i_sp = require('child_process').spawn;
 const i_es = require('./es');
@@ -147,9 +146,15 @@ async function schedule() {
    }
 }
 
+function getProtocol(url) {
+   if (!url) return null;
+   const p = url.split('/');
+   if (!p[0]) return 'file';
+   return p[0].split(':')[0];
+}
+
 async function buildCmd(task) {
-   const uobj = i_url.parse(task.url);
-   const proto = uobj.protocol.split(':')[0];
+   const proto = getProtocol(task.url);
    const buildCmdFn = env.buildCmd[proto] || env.buildCmd._default;
    const cmd = buildCmdFn(task);
    console.log('task.cmd', JSON.stringify(cmd));
