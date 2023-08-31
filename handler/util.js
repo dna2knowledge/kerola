@@ -29,6 +29,22 @@ function wait(ms) {
    });
 }
 
+function waitFor(asyncFn, max) {
+   return new Promise((r, e) => {
+      once(asyncFn, max, 0, r, e);
+      async function once(asyncFn, max, acc, r, e) {
+         if (acc > max) return e('timeout');
+         try {
+            const x = asyncFn && await asyncFn();
+            if (x) return r(true);
+            setTimeout(once, 500, asyncFn, max, acc+1, r, e);
+         } catch(err) {
+            e(err);
+         }
+      }
+   });
+}
+
 async function act(asyncFn, opt) {
   opt = Object.assign({
      needHeadless: false,
@@ -74,6 +90,7 @@ module.exports = {
    act,
    slient,
    wait,
+   waitFor,
    waitUntilBrowserClose,
    hookOnRequest,
    buildQueryObject,
