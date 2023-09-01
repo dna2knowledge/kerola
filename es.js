@@ -109,6 +109,7 @@ const logic = {
             from: from || 0,
             size: size || 50,
             min_score: query.length * 0.9,
+            track_total_hits: true,
          });
          const r = {
             total: rs.hits.total,
@@ -176,6 +177,7 @@ const logic = {
             from: from || 0,
             size: size || 50,
             min_score: query.length * 0.9,
+            track_total_hits: true,
          });
          const r = {
             total: rs.hits.total,
