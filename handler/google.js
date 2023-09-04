@@ -105,15 +105,12 @@ async function dumpDom(page) {
    return await page.content();
 }
 
-async function fetch(page, companyName, flags) {
+async function fetch(page, query, flags) {
   console.error(`[I] using Google`);
-  await page.goto('https://google.com/');
+  await page.goto(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
   // Set screen size
   await page.setViewport({width: 1080, height: 1024});
   // Type into search box
-  await page.focus('textarea');
-  await page.type('textarea', companyName);
-  await page.keyboard.press('Enter');
   // Wait for Google result
   // notice that we set timeout to 0 in case we meet robot check
   await page.waitForSelector('#result-stats', { timeout: 0 });
