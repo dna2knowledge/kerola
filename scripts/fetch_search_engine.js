@@ -3,6 +3,7 @@ const puppeteer = require('puppeteer');
 const hUtil = require('../handler/util');
 const hGoogle = require('../handler/google');
 const hBing = require('../handler/bing');
+const hBaidu = require('../handler/baidu');
 
 const flags = {};
 
@@ -26,8 +27,9 @@ if (require.main === module) {
   ) || process.argv.includes('--google');
 
   await hUtil.act(async (page) => {
-     if (flags.fromGoogle) await hGoogle.fetch(page, companyName, flags);
-     if (flags.fromBingCN) await hBing.fetchCN(page, companyName, flags);
+     if (flags.fromGoogle) await hGoogle.fetch(page, query, flags);
+     if (flags.fromBingCN) await hBing.fetchCN(page, query, flags);
+     if (flags.fromBaidu) await hBaidu.fetch(page, query, flags);
   }, flags);
 })();
 }
