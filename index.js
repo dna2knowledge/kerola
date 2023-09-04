@@ -220,11 +220,12 @@ const server = createServer({
             const q = opt.json.q;
             const pr = opt.json.pr; // priority
             const memo = opt.json.memo;
+            const isRecursive = opt.json.nest;
             if (!q) { res.writeHead(400); return res.end(); }
             if (q.startsWith('http://') || q.startsWith('https://')) {
                (async () => {
                   try {
-                     await i_crawler.request(q, pr, { memo });
+                     await i_crawler.request(q, pr, { memo, recursive: isRecursive });
                      util.sendJson(res, { ok: 1 });
                   } catch(err) {
                      res.writeHead(500); res.end();
@@ -233,6 +234,7 @@ const server = createServer({
             } else if (q.startsWith('bing://') || q.startsWith('google://') || q.startsWith('baidu://') || q.startsWith('bingcn://')) {
                (async () => {
                   try {
+                     // should not do recursively
                      await i_crawler.request(q, pr, { memo });
                      util.sendJson(res, { ok: 1 });
                   } catch(err) {
