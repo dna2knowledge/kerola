@@ -20,14 +20,16 @@ if (require.main === module) {
   if (flags.keepAlive) console.error(`[I] need to close browser manually ...`);
 
   flags.fromBaidu = process.argv.includes('--baidu');
+  flags.fromBing = process.argv.includes('--bing');
   flags.fromBingCN = process.argv.includes('--bing-cn');
   // by default, use google, the former should be !(flags.fromA || flags.fromB || ...)
   flags.fromGoogle = !(
-     flags.fromBaidu || flags.fromBingCN
+     flags.fromBaidu || flags.fromBingCN || flags.fromBing
   ) || process.argv.includes('--google');
 
   await hUtil.act(async (page) => {
      if (flags.fromGoogle) await hGoogle.fetch(page, query, flags);
+     if (flags.fromBing) await hBing.fetch(page, query, flags);
      if (flags.fromBingCN) await hBing.fetchCN(page, query, flags);
      if (flags.fromBaidu) await hBaidu.fetch(page, query, flags);
   }, flags);

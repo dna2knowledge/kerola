@@ -39,8 +39,24 @@ async function extractCNSearchResults(page) {
    return r;
 }
 
-async function fetchCN(page, companyName, flags) {
+async function fetch(page, query, flags) {
   console.error(`[I] using Bing`);
+  await page.goto(`https://bing.com/search?q=${encodeURIComponent}`);
+  await page.setViewport({width: 1080, height: 1024});
+
+  await page.waitForSelector('#b_results', { timeout: 0 });
+  // TODO: if meet robot check, need manually bypass it
+
+  if (flags.needExtract) {
+     const bingCNResults = await extractCNSearchResults(page);
+     console.log(JSON.stringify(bingCNResults));
+  } else {
+     console.log(await dumpDomCN(page));
+  }
+}
+
+async function fetchCN(page, query, flags) {
+  console.error(`[I] using Bing CN`);
   while(true) {
      await page.goto('https://cn.bing.com/');
      await page.setViewport({width: 1080, height: 1024});
@@ -58,7 +74,7 @@ async function fetchCN(page, companyName, flags) {
   estSwitch.dispose();
 
   await page.focus('input[name="q"]');
-  await page.type('input[name="q"]', companyName);
+  await page.type('input[name="q"]', query);
   await page.keyboard.press('Enter');
   await page.waitForSelector('#b_results', { timeout: 0 });
   // TODO: if meet robot check, need manually bypass it
@@ -73,6 +89,7 @@ async function fetchCN(page, companyName, flags) {
 
 const api = {
    extractCNSearchResults,
+   fetch,
    fetchCN,
 };
 
