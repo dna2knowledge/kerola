@@ -51,7 +51,10 @@ function run(cmd, args, opt) {
 
 const env = {
    buildCmd: {
+      google: require('./protocols/google').buildCmd,
+      bing: require('./protocols/bing').buildCmd,
       bingcn: require('./protocols/bingcn').buildCmd,
+      baidu: require('./protocols/baidu').buildCmd,
       _default: require('./protocols/https').buildCmd,
    },
    actAvailable: i_config.CR_ACT_N,
