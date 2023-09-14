@@ -189,6 +189,7 @@ function buildQuery(req) {
 
 const i_es = require('./es');
 const i_crawler = require('./crawler');
+const i_pagelink = require('./analysis/pagelink');
 
 const server = createServer({
    api: {
@@ -299,10 +300,14 @@ const server = createServer({
          uet: requireLogin((req, res, opt) => {
             const url = opt.json.url;
             const tag = opt.json.tag || '';
+            const extracted = !!opt.json.extracted;
             if (!url) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
                   const item = JSON.parse(await i_es.rawLevelDB.get(`${tag}:${url}`));
+                  if (item && extracted) {
+                     item.extracted = i_pagelink.extractBasicInfo(item.dom, item.url);
+                  }
                   util.sendJson(res, item);
                } catch (err) {
                   res.writeHead(500); res.end();
