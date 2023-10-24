@@ -124,8 +124,7 @@ const logic = {
          if (!row) return null;
          const rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = $1 AND tag = $2`, [row.id, tag || null]);
          if (!rs) return null;
-         rs.url = url;
-         return rs;
+         return { url, raw: rs };
       } catch(err) {
          return null;
       }

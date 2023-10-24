@@ -305,10 +305,10 @@ const server = createServer({
             (async () => {
                try {
                   const item = JSON.parse(await i_adapter.logic.getRawByUrl(url, tag));
-                  if (item && extracted) {
-                     item.extracted = i_pagelink.extractBasicInfo(item.dom, item.url);
+                  if (item && item.raw && extracted) {
+                     item.raw.extracted = i_pagelink.extractBasicInfo(item.raw.dom, item.url);
                   }
-                  util.sendJson(res, item);
+                  util.sendJson(res, Object.assign({ url: item.url }, item.raw));
                } catch (err) {
                   res.writeHead(500); res.end();
                }

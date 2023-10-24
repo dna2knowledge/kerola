@@ -121,11 +121,10 @@ const logic = {
       try {
          return await ser(async() => {
             const row = await api.dbget(`SELECT id FROM ${config.index.req} WHERE url = ?`, url);
-            if (!row) return;
+            if (!row) return null;
             const rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = ? AND tag = ?`, [row.id, tag || null]);
-            if (!rs) return;
-            rs.url = url;
-            return rs;
+            if (!rs) return null;
+            return { url, raw: rs };
          });
       } catch(err) {
          return null;
