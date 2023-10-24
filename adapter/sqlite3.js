@@ -266,7 +266,7 @@ const logic = {
          await ser(async () => {
             const row = await api.dbget(`SELECT id FROM ${config.index.ref} WHERE id = ? AND source = ?`, id, src_name);
             if (row) {
-               C.run(`UPDATE ${config.index.ref} SET ts = CURRENT_TIMESTAMP, ref = ?`, obj ? JSON.stringify(obj) : null);
+               C.run(`UPDATE ${config.index.ref} SET ts = CURRENT_TIMESTAMP, ref = ? WHERE id = ? AND source = ?`, obj ? JSON.stringify(obj) : null, id, src_name);
             } else {
                C.run(`INSERT INTO ${config.index.ref} (id, source, ref) VALUES (?, ?, ?)`, id, src_name, obj ? JSON.stringify(obj) : null);
             }
