@@ -187,7 +187,7 @@ function buildQuery(req) {
    return obj;
 }
 
-const i_es = require('./es');
+const i_adapter = require('./adapter/index');
 const i_crawler = require('./crawler');
 const i_pagelink = require('./analysis/pagelink');
 
@@ -262,7 +262,7 @@ const server = createServer({
             if (!id) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const item = await i_es.logic.getReqById(id);
+                  const item = await i_adapter.logic.getReqById(id);
                   util.sendJson(res, item);
                } catch (err) {
                   res.writeHead(500); res.end();
@@ -276,7 +276,7 @@ const server = createServer({
             if (!q) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const items = await i_es.logic.searchReqs(q, from, size);
+                  const items = await i_adapter.logic.searchReqs(q, from, size);
                   util.sendJson(res, items);
                } catch (err) {
                   res.writeHead(500); res.end();
@@ -290,7 +290,7 @@ const server = createServer({
             if (!url) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const item = JSON.parse((await i_es.logic.getRawByUrl(url)).raw);
+                  const item = JSON.parse((await i_adapter.logic.getRawByUrl(url)).raw);
                   util.sendJson(res, item);
                } catch (err) {
                   res.writeHead(500); res.end();
@@ -304,7 +304,7 @@ const server = createServer({
             if (!url) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const item = JSON.parse(await i_es.rawLevelDB.get(`${tag}:${url}`));
+                  const item = JSON.parse(await i_adapter.logic.getRawByUrl(url, tag));
                   if (item && extracted) {
                      item.extracted = i_pagelink.extractBasicInfo(item.dom, item.url);
                   }
@@ -321,13 +321,13 @@ const server = createServer({
             if (!q) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const rs = await i_es.logic.searchReqs(q, from, size);
+                  const rs = await i_adapter.logic.searchReqs(q, from, size);
                   const items = rs.items;
                   for (let i = 0, n = items?.length || 0; i < n; i++) {
                      const item = items[i];
                      const url = item.url;
                      try {
-                        const obj = JSON.parse((await i_es.logic.getRawByUrl(url)).raw);
+                        const obj = JSON.parse((await i_adapter.logic.getRawByUrl(url)).raw);
                         item.dom = obj.dom;
                      } catch (err) {
                      }
@@ -348,8 +348,8 @@ const server = createServer({
             if (!id) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const item = await i_es.logic.getCookedById(id);
-                  const ref = item ? (await i_es.logic.getRefById(id)) : null;
+                  const item = await i_adapter.logic.getCookedById(id);
+                  const ref = item ? (await i_adapter.logic.getRefById(id)) : null;
                   util.sendJson(res, { truth: item, ref, });
                } catch (err) {
                   res.writeHead(500); res.end();
@@ -363,7 +363,7 @@ const server = createServer({
             if (!q) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const items = await i_es.logic.searchCookeds(q, from, size);
+                  const items = await i_adapter.logic.searchCookeds(q, from, size);
                   util.sendJson(res, items);
                } catch (err) {
                   res.writeHead(500); res.end();
@@ -376,7 +376,7 @@ const server = createServer({
             if (!obj || !obj.name) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const rs = await i_es.logic.updateCooked(id, obj);
+                  const rs = await i_adapter.logic.updateCooked(id, obj);
                   const resObj = { ok : 1 };
                   if (rs && rs._id) resObj.id = rs._id;
                   util.sendJson(res, resObj);
@@ -390,7 +390,7 @@ const server = createServer({
             if (!id) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const item = await i_es.logic.getRefById(id);
+                  const item = await i_adapter.logic.getRefById(id);
                   util.sendJson(res, item);
                } catch (err) {
                   res.writeHead(500); res.end();
@@ -404,7 +404,7 @@ const server = createServer({
             if ((!id && !name) || !obj) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const rs = await i_es.logic.updateRef(id, name, obj);
+                  const rs = await i_adapter.logic.updateRef(id, name, obj);
                   const resObj = { ok : 1 };
                   if (rs && rs._id) resObj.id = rs._id;
                   util.sendJson(res, resObj);

@@ -1,7 +1,9 @@
 const i_es = require('@elastic/elasticsearch');
 const i_lv = require('level');
-const i_config = require('./config');
+const i_config = require('../config');
 
+// index.raw should be a folder path for level DB
+// i.e. DB_RAW_NAME = /path/to/lvdb_data
 const config = { index: i_config.index, };
 
 const C = new i_es.Client({ node: i_config.ES_URL });

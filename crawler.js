@@ -2,7 +2,7 @@ const i_fs = require('fs');
 const i_path = require('path');
 const i_crypto = require('crypto');
 const i_sp = require('child_process').spawn;
-const i_es = require('./es');
+const i_adapter = require('./adapter/index');
 const i_config = require('./config');
 
 function run(cmd, args, opt) {
@@ -77,17 +77,17 @@ function cleanupParam(param) {
 
 async function request(url, priority, param) {
    if (!url) return;
-   const reqObj = await i_es.logic.getReqByUrl(url);
+   const reqObj = await i_adapter.logic.getReqByUrl(url);
    param = cleanupParam(param);
    if (reqObj) {
-      await i_es.logic.updateReq(reqObj.id, {
+      await i_adapter.logic.updateReq(reqObj.id, {
          url, param,
          pr: priority || 0,
          ok: 0,
          ts: new Date().getTime(),
       });
    } else {
-      await i_es.logic.updateReq(null, {
+      await i_adapter.logic.updateReq(null, {
          url, param,
          pr: priority || 0,
          ok: 0,
@@ -102,16 +102,16 @@ async function requestObj(obj, priority) {
    if (!url) return;
    const param = cleanupParam(Object.assign({}, obj));
    delete param.url;
-   const reqObj = await i_es.logic.getReqByUrl(url);
+   const reqObj = await i_adapter.logic.getReqByUrl(url);
    if (reqObj) {
-      await i_es.logic.updateReq(reqObj.id, {
+      await i_adapter.logic.updateReq(reqObj.id, {
          url, param,
          pr: priority || 0,
          ok: 0,
          ts: new Date().getTime(),
       });
    } else {
-      await i_es.logic.updateReq(null, {
+      await i_adapter.logic.updateReq(null, {
          url, param,
          pr: priority || 0,
          ok: 0,
@@ -124,7 +124,7 @@ async function scheduleOnce() {
    const qN = env.queue.length;
    const quota = env.queueMax - qN;
    if (quota <= 0) return false;
-   const reqs = await i_es.logic.getSomeTodoReqs(quota);
+   const reqs = await i_adapter.logic.getSomeTodoReqs(quota);
    if (!reqs || !reqs.items) {
       console.log(`[E] schedule failed ...`);
       return;
@@ -181,13 +181,13 @@ async function act() {
       const code = await run(cmd[0], cmd.slice(1), { stdout: outF, timeout: 60 * 1000 });
       if (code) throw 'abnormal-exit';
       delete env.queueMap[task.url];
-      await i_es.logic.updateReq(task.id, Object.assign(taskobj, {
+      await i_adapter.logic.updateReq(task.id, Object.assign(taskobj, {
          ok: 1,
          ts: new Date().getTime(),
       }));
       const dom = i_fs.readFileSync(outF).toString();
       i_fs.unlinkSync(outF);
-      await i_es.logic.updateRaw(task.url, JSON.stringify({
+      await i_adapter.logic.updateRaw(task.url, JSON.stringify({
          url: task.url,
          dom,
          ok: 0,
@@ -197,7 +197,7 @@ async function act() {
       if (task.param?.recursive) recursiveRequest(taskobj, dom);
    } catch(err) {
       delete env.queueMap[task.url];
-      await i_es.logic.updateReq(task.id, Object.assign(taskobj, {
+      await i_adapter.logic.updateReq(task.id, Object.assign(taskobj, {
          ok: -1,
          ts: new Date().getTime(),
       }));
@@ -298,7 +298,7 @@ async function recursiveRequest(taskobj, dom) {
    for(let i = 0; i < hrefs.length; i++) {
       const linkobj = hrefs[i];
       try {
-         const data = await i_es.keyval.get(`:${linkobj.href}`);
+         const data = await i_adapter.logic.getRawByUrl(linkobj.href);
          if (data) continue;
       } catch(err) { }
       await request(linkobj.href, taskobj.pr || 0, taskobj.param);

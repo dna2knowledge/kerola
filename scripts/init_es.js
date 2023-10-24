@@ -1,4 +1,4 @@
-const i_es = require('../es');
+const i_es = require('../adapter/es');
 
 async function main() {
    await i_es.createTrigramIndex(i_es.config.index.req);
