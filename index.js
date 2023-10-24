@@ -7,12 +7,12 @@ const i_crypto = require('crypto');
 const i_config = require('./config');
 
 const i_env = {
-   debug: !!process.env.TINY_DEBUG,
+   debug: i_config.TINY_DEBUG,
    server: {
-      host: process.env.TINY_HOST || '127.0.0.1',
-      port: parseInt(process.env.TINY_PORT || '8081'),
-      httpsCADir: process.env.TINY_HTTPS_CA_DIR?i_path.resolve(process.env.TINY_HTTPS_CA_DIR):null,
-      hostAllow: process.env.HOSTALLOW ? process.env.HOSTALLOW.split(',') : [],
+      host: i_config.TINY_HOST,
+      port: i_config.TINY_PORT,
+      httpsCADir: i_config.TINY_HTTPS_CA_DIR,
+      hostAllow: i_config.HOSTALLOW,
       maxPayload: i_config.MAX_PAYLOAD_SIZE,
       userpassF: i_config.AUTH_USERPASS_FILE,
    },
@@ -55,7 +55,7 @@ function basicRoute (req, res, router) {
       let key = path.shift();
       f = f[key];
       if (!f) break;
-      if (typeof(f) === 'function') {
+      if (typeof(f) === 'function' && key !== 'constructor') {
          return f(req, res, {
             path: path,
             query: query

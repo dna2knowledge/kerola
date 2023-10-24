@@ -9,6 +9,12 @@ module.exports = {
       cooked: process.env.DB_COOKED_NAME || 'kerola_cooked',
       ref: process.env.DB_REF_NAME || 'kerola_ref',
    },
+   TINY_DEBUG: !!process.env.TINY_DEBUG,
+   TINY_HOST: process.env.TINY_HOST || '127.0.0.1',
+   TINY_PORT: parseInt(process.env.TINY_PORT || '8081'),
+   TINY_HTTPS_CA_DIR: process.env.TINY_HTTPS_CA_DIR ? i_path.resolve(process.env.TINY_HTTPS_CA_DIR) : null,
+   HOSTALLOW: process.env.HOSTALLOW ? process.env.HOSTALLOW.split(',') : [],
+
    AUTH_USERPASS_FILE: process.env.AUTH_USERPASS_FILE,
    MAX_PAYLOAD_SIZE: parseInt(process.env.MAX_PAYLOAD_SIZE || '10') * 1024, /* by default 10KB */
 
