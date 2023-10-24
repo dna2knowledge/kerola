@@ -20,7 +20,8 @@ pm2 start --name kerola-be index.js
   - nest is used to tell crawler to fetch all related html documents under the same host
 - POST `/api/raw/get` `/api/raw/uet` `{"user":"<user>","token":"<token>","url":"<url>"}` -> `{"url":"<url>","dom":"<html>","ts":<timestamp>,"ok":<stat>}`
   - get html contents by url
-  - uet is a little faster than get, for it reads data from level db directly, no check request stat from ElasticSearch
+  - `es` adapter: uet is a little faster than get, for it reads data from level db directly, no check request stat from ElasticSearch
+  - uet can accept `extracted` flag so that DOM contents will be parsed into url objects `"extracted":[{"name":"<name>","href":"<url>"}, ...]`
 - POST `/api/raw/search` `{"user":"<user>","token":"<token>","q":"<query>"}` -> `{"total":{"value":<number>,"relation":"eq"},"items":[{"id":"<id>","dom":"<html>","ok":"<stat>","pr":"<priority>","ts":<timestamp>,"url":"<url>"}, ...]}`
   - search for requests
 - POST `/api/cooked/search` `{"user":"<user>","token":"<token>","q":"<query>"}` -> `{"total":{"value":<number>,"relation":"eq"},"items":[{"id":"<id>","name":"<name>","type":"<type>","attr":{...},"tag":[...]}, ...]}`
