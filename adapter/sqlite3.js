@@ -103,7 +103,7 @@ const logic = {
             if (id) {
                const row = await api.dbget(`SELECT id, url, pr, ok, ts, params FROM ${config.index.req} WHERE id = ?`, id);
                C.run(`UPDATE ${config.index.req}
-                  pr = ?, ok = ?, ts = CURRENT_TIMESTAMP FROM ${config.index.req}
+                  SET pr = ?, ok = ?, ts = CURRENT_TIMESTAMP
                   WHERE id = ?
                `, obj.pr || row.pr, obj.ok || row.ok, id);
             } else {
@@ -119,12 +119,10 @@ const logic = {
    },
    getRawByUrl: async (url, tag) => {
       try {
-         const rs = await api.keyval.get(`${tag?tag:''}:${url}`);
-         return { url, raw: rs };
          return await ser(async() => {
             const row = await api.dbget(`SELECT id FROM ${config.index.req} WHERE url = ?`, url);
             if (!row) return;
-            const rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = ? AND tag = ?`, id, tag);
+            const rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = ? AND tag = ?`, [row.id, tag || null]);
             if (!rs) return;
             rs.url = url;
             return rs;
@@ -135,20 +133,21 @@ const logic = {
    },
    updateRaw: async (url, text, tag) => {
       try {
+         const json = JSON.parse(text);
          return await ser(async() => {
             const row = await api.dbget(`SELECT id FROM ${config.index.req} WHERE url = ?`, url);
             if (!row) return;
-            const rs = await api.dbget(`SELECT id, tag FROM ${config.index.raw} WHERE id = ? AND tag = ?`, id, tag);
+            const rs = await api.dbget(`SELECT id, tag FROM ${config.index.raw} WHERE id = ? AND tag = ?`, [row.id, tag || null]);
             if (rs) {
                C.run(`UPDATE ${config.index.raw}
-                  dom = ?, ok = ?, ts = CURRENT_TIMESTAMP FROM ${config.index.raw}
+                  SET dom = ?, ok = ?, ts = CURRENT_TIMESTAMP
                   WHERE id = ? AND tag = ?
-               `, text, 0, row.id, tag);
+               `, json.dom, json.ok, row.id, tag);
             } else {
                C.run(`INSERT INTO ${config.index.raw}
                   (id, tag, dom, ok, ts) VALUES
-                  (?,   ?,  ?,  0, CURRENT_TIMESTAMP)
-               `, row.id, tag, text);
+                  (?,   ?,  ?,  ?, CURRENT_TIMESTAMP)
+               `, row.id, tag, json.dom, json.ok);
             }
          });
       } catch (err) {
@@ -214,7 +213,7 @@ const logic = {
             if (id) {
                const row = await api.dbget(`SELECT id, name, type, ok, obj FROM ${config.index.cooked} WHERE id = ?`, id);
                C.run(`UPDATE ${config.index.cooked}
-                  type = ?, ok = ?, obj = ?, ts = CURRENT_TIMESTAMP FROM ${config.index.req}
+                  SET type = ?, ok = ?, obj = ?, ts = CURRENT_TIMESTAMP
                   WHERE id = ?
                `, obj.type || row.type, obj.ok || row.ok, obj ? JSON.stringify(obj.obj) : row.obj, id);
             } else {
