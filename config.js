@@ -31,5 +31,6 @@ module.exports = {
    CR_ACT_N: parseInt(process.env.CR_ACT_N || '1'),
    CR_TMP_DIR: process.env.CR_TMP_DIR || '/tmp',
    CR_QUEUE_MAX: parseInt(process.env.CR_QUEUE_MAX || '10'),
+   CR_PENALTY_S: parseInt(process.env.CR_PENALTY_S || '10') /* seconds */,
 };
 

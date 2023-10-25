@@ -63,6 +63,8 @@ const env = {
    queue: [],
    queueMap: {},
    currentTask: {},
+   // TODO strategy for penalty
+   penalty: {},
 };
 
 function cleanupParam(param) {
@@ -153,11 +155,40 @@ async function buildCmd(task) {
    return cmd;
 }
 
+function do_penalty(task) {
+   const url = task.url;
+   if (!url) return true; // direct discard invalid task
+   const ts = new Date().getTime();
+   const protocol = url.split('/')[0];
+   if (protocol !== 'http:' && protocol !== 'https:') {
+      if (!env.penalty[protocol]) {
+         env.penalty[protocol] = ts;
+         return false;
+      } else if (ts - env.penalty[protocol] <= i_config.CR_PENALTY_S) {
+         env.queue.push(task);
+         return true;
+      }
+      env.penalty[protocol] = ts;
+      return false;
+   }
+   // XXX memory problem when too many domains
+   const domain = getRootHost(url.split('/')[2]);
+   if (!env.penalty[domain]) {
+      env.penalty[domain] = ts;
+      return false;
+   } else if (ts - env.penalty[domain] <= i_config.CR_PENALTY_S) {
+      env.queue.push(task);
+      return true;
+   }
+   return false;
+}
+
 async function act() {
    if (!env.queue.length) return;
    if (!env.actAvailable) return;
    env.actAvailable --;
    const task = env.queue.shift();
+   if (i_config.CR_PENALTY_S && do_penalty(task)) return next();
    console.log('task', task.url);
    let tid;
    while(!tid || env.currentTask[tid]) tid = i_crypto.randomUUID();
@@ -192,10 +223,10 @@ async function act() {
       }));
    }
    delete env.currentTask[tid];
-   env.actAvailable ++;
    next();
 
    function next() {
+      env.actAvailable ++;
       setTimeout(act, 1000);
    }
 }
@@ -263,7 +294,7 @@ function matchRootHost(url, rootHost) {
 function getRootHost(host) {
    const parts = host.split(':')[0].split('.');
    if (parts.length <= 2) return parts.join('.');
-   return parts.slice(parts.length-2).join('.');
+   return parts.slice(2).join('.');
 }
 
 async function recursiveRequest(taskobj, dom) {
