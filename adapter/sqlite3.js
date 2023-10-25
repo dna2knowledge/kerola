@@ -27,14 +27,14 @@ const logic = {
       try {
          return await ser(async() => {
             const rows = await api.dball(`SELECT
-               id, url, pr, ok, ts, params FROM ${config.index.req}
+               id, url, pr, ok, ts, param FROM ${config.index.req}
                WHERE ok = ?
                ORDER BY pr DESC, RANDOM() LIMIT ${size}
             `, ok);
             return {
                total: rows.length,
                items: rows.map(z => {
-                  if (z.params) z.params = JSON.parse(z.params);
+                  if (z.param) z.param = JSON.parse(z.param);
                   return z;
                }),
             }
@@ -47,8 +47,8 @@ const logic = {
    getReqById: async (id) => {
       try {
          return await ser(async() => {
-            const row = await api.dbget(`SELECT id, url, pr, ok, ts, params FROM ${config.index.req} WHERE id = ?`, id);
-            if (row.params) row.params = JSON.parse(row.params);
+            const row = await api.dbget(`SELECT id, url, pr, ok, ts, param FROM ${config.index.req} WHERE id = ?`, id);
+            if (row.param) row.param = JSON.parse(row.param);
             return row;
          });
       } catch(err) {
@@ -59,8 +59,8 @@ const logic = {
    getReqByUrl: async (url) => {
       try {
          return await ser(async() => {
-            const row = await api.dbget(`SELECT id, url, pr, ok, ts, params FROM ${config.index.req} WHERE url = ?`, url);
-            if (row.params) row.params = JSON.parse(row.params);
+            const row = await api.dbget(`SELECT id, url, pr, ok, ts, param FROM ${config.index.req} WHERE url = ?`, url);
+            if (row.param) row.param = JSON.parse(row.param);
             return row;
          });
       } catch(err) {
@@ -80,14 +80,14 @@ const logic = {
                WHERE UPPER(url) LIKE ?
             `, q);
             const rows = await api.dball(`SELECT
-               id, url, pr, ok, ts, params FROM ${config.index.req}
+               id, url, pr, ok, ts, param FROM ${config.index.req}
                WHERE UPPER(url) LIKE ?
                LIMIT ${size} OFFSET ${from}
             `, q);
             return {
                total: cnt.n,
                items: rows.map(z => {
-                  if (z.params) z.params = JSON.parse(z.params);
+                  if (z.param) z.param = JSON.parse(z.param);
                   return z;
                }),
             }
@@ -101,16 +101,16 @@ const logic = {
       try {
          return await ser(async() => {
             if (id) {
-               const row = await api.dbget(`SELECT id, url, pr, ok, ts, params FROM ${config.index.req} WHERE id = ?`, id);
+               const row = await api.dbget(`SELECT id, url, pr, ok, ts, param FROM ${config.index.req} WHERE id = ?`, id);
                C.run(`UPDATE ${config.index.req}
                   SET pr = ?, ok = ?, ts = CURRENT_TIMESTAMP
                   WHERE id = ?
                `, obj.pr || row.pr, obj.ok || row.ok, id);
             } else {
                C.run(`INSERT INTO ${config.index.req}
-                  (url, pr, ok, ts, params) VALUES
+                  (url, pr, ok, ts, param) VALUES
                   (?,   ?,  ?,  CURRENT_TIMESTAMP,  ?)
-               `, obj.url, obj.pr || 0, 0, obj.params ? JSON.stringify(obj.params) : null);
+               `, obj.url, obj.pr || 0, 0, obj.param ? JSON.stringify(obj.param) : null);
             }
          });
       } catch(err) {
@@ -288,7 +288,7 @@ const api = {
             ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             pr INTEGER DEFAULT 0,
             ok INTEGER DEFAULT 0,
-            params TEXT
+            param TEXT
          )`);
          C.run(`CREATE TABLE ${config.index.raw} (
             id INTEGER REFERENCES ${config.index.req}(id),

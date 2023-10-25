@@ -37,7 +37,7 @@ const logic = {
       if (size === 0) return [];
       try {
          const rows = await api.dball(`SELECT
-            id, url, pr, ok, ts, params FROM ${config.index.req}
+            id, url, pr, ok, ts, param FROM ${config.index.req}
             WHERE ok = $1
             ORDER BY pr DESC, RANDOM() LIMIT ${size}
          `, [ok]);
@@ -52,7 +52,7 @@ const logic = {
    },
    getReqById: async (id) => {
       try {
-         const row = await api.dbget(`SELECT id, url, pr, ok, ts, params FROM ${config.index.req} WHERE id = $1`, [id]);
+         const row = await api.dbget(`SELECT id, url, pr, ok, ts, param FROM ${config.index.req} WHERE id = $1`, [id]);
          return row;
       } catch(err) {
          // TODO: handle err
@@ -61,7 +61,7 @@ const logic = {
    },
    getReqByUrl: async (url) => {
       try {
-         const row = await api.dbget(`SELECT id, url, pr, ok, ts, params FROM ${config.index.req} WHERE url = $1`, [url]);
+         const row = await api.dbget(`SELECT id, url, pr, ok, ts, param FROM ${config.index.req} WHERE url = $1`, [url]);
          return row;
       } catch(err) {
          // TODO: handle err
@@ -79,7 +79,7 @@ const logic = {
             WHERE url ILIKE $1
          `, [q]);
          const rows = await api.dball(`SELECT
-            id, url, pr, ok, ts, params FROM ${config.index.req}
+            id, url, pr, ok, ts, param FROM ${config.index.req}
             WHERE url ILIKE $1
             ${from} LIMIT ${size}
          `, [q]);
@@ -95,16 +95,16 @@ const logic = {
    updateReq: async (id, obj) => {
       try {
          if (id) {
-            const row = await api.dbget(`SELECT id, url, pr, ok, ts, params FROM ${config.index.req} WHERE id = $1`, [id]);
+            const row = await api.dbget(`SELECT id, url, pr, ok, ts, param FROM ${config.index.req} WHERE id = $1`, [id]);
             await C.query(`UPDATE ${config.index.req}
                SET pr = $1, ok = $2, ts = NOW()
                WHERE id = $3
             `, [obj.pr || row.pr, obj.ok || row.ok, id]);
          } else {
             await C.query(`INSERT INTO ${config.index.req}
-               (url, pr, ok, ts, params) VALUES
+               (url, pr, ok, ts, param) VALUES
                ($1,   $2,  $3,  NOW(),  $4)
-            `, [obj.url, obj.pr || 0, 0, obj.params ? JSON.stringify(obj.params) : null]);
+            `, [obj.url, obj.pr || 0, 0, obj.param ? JSON.stringify(obj.param) : null]);
          }
       } catch(err) {
          // TODO: handle err
@@ -258,7 +258,7 @@ const api = {
             ts TIMESTAMP DEFAULT NOW(),
             pr INTEGER DEFAULT 0,
             ok INTEGER DEFAULT 0,
-            params JSON
+            param JSON
          )`);
          await C0.query(`CREATE INDEX index_req_url ON ${config.index.req}(url)`);
          await C0.query(`CREATE TABLE ${config.index.raw} (
