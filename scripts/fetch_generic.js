@@ -1,8 +1,6 @@
 const puppeteer = require('puppeteer');
 
 const hUtil = require('../handler/util');
-const hGoogle = require('../handler/google');
-const hBing = require('../handler/bing');
 
 const flags = {};
 
