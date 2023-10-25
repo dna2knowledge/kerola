@@ -16,17 +16,17 @@ const C = new i_pg.Pool({
 });
 
 async function atom(asyncFn) {
-   const C0 = await client.connect();
+   const C0 = await C.connect();
    try {
-      await C.query(`BEGIN`);
+      await C0.query(`BEGIN`);
       await asyncFn(C0);
-      await C.query(`COMMIT`);
+      await C0.query(`COMMIT`);
       return null;
    } catch (err) {
-      await C.query(`ROLLBACK`);
+      await C0.query(`ROLLBACK`);
       return err;
    } finally {
-      C.release();
+      C0.release();
    }
 }
 
@@ -43,10 +43,7 @@ const logic = {
          `, [ok]);
          return {
             total: rows.length,
-            items: rows.map(z => {
-               if (z.params) z.params = JSON.parse(z.params);
-               return z;
-            }),
+            items: rows,
          }
       } catch(err) {
          // TODO: handle err
@@ -56,7 +53,6 @@ const logic = {
    getReqById: async (id) => {
       try {
          const row = await api.dbget(`SELECT id, url, pr, ok, ts, params FROM ${config.index.req} WHERE id = $1`, [id]);
-         if (row.params) row.params = JSON.parse(row.params);
          return row;
       } catch(err) {
          // TODO: handle err
@@ -66,7 +62,6 @@ const logic = {
    getReqByUrl: async (url) => {
       try {
          const row = await api.dbget(`SELECT id, url, pr, ok, ts, params FROM ${config.index.req} WHERE url = $1`, [url]);
-         if (row.params) row.params = JSON.parse(row.params);
          return row;
       } catch(err) {
          // TODO: handle err
@@ -90,10 +85,7 @@ const logic = {
          `, [q]);
          return {
             total: cnt.n,
-            items: rows.map(z => {
-               if (z.params) z.params = JSON.parse(z.params);
-               return z;
-            }),
+            items: rows,
          };
       } catch(err) {
          // TODO: handle err
@@ -153,7 +145,6 @@ const logic = {
    getCookedById: async (id) => {
       try {
          const row = await api.dbget(`SELECT id, name, type, ts, ok, obj FROM ${config.index.cooked} WHERE id = $1`, [id]);
-         if (row.obj) row.obj = JSON.parse(row.obj);
          return row;
       } catch(err) {
          // TODO: handle err
@@ -163,7 +154,6 @@ const logic = {
    getCookedByName: async (name) => {
       try {
          const row = await api.dbget(`SELECT id, name, type, ts, ok, obj FROM ${config.index.cooked} WHERE name = $1`, [name]);
-         if (row.obj) row.obj = JSON.parse(row.obj);
          return row;
       } catch(err) {
          // TODO: handle err
@@ -187,10 +177,7 @@ const logic = {
          `, [q]);
          return {
             total: cnt.n,
-            items: rows.map(z => {
-               if (z.obj) z.obj = JSON.parse(z.obj);
-               return z;
-            }),
+            items: rows,
          };
       } catch(err) {
          // TODO: handle err
@@ -221,7 +208,7 @@ const logic = {
          if (!row) return null;
          const sources = await api.dball(`SELECT source, ref FROM ${config.index.ref} WHERE id = $1`, [row.id]);
          const obj = {};
-         sources.forEach(z => { if (z.ref) obj[z.source] = JSON.parse(z.ref); });
+         sources.forEach(z => { if (z.ref) obj[z.source] = z.ref; });
          obj.name = name;
          obj.id = row.id;
          return obj;
@@ -236,7 +223,7 @@ const logic = {
          if (!row) return null;
          const sources = await api.dball(`SELECT source, ref FROM ${config.index.ref} WHERE id = $1`, [row.id]);
          const obj = {};
-         sources.forEach(z => { if (z.ref) obj[z.source] = JSON.parse(z.ref); });
+         sources.forEach(z => { if (z.ref) obj[z.source] = z.ref; });
          obj.name = name;
          obj.id = row.id;
          return obj;
@@ -306,10 +293,10 @@ const api = {
       const rs = await C.query(sql, vals);
       return rs.rows[0];
    },
-   dball: (sql, vals) => new Promise((r, e) => {
+   dball: async (sql, vals) => {
       const rs = await C.query(sql, vals);
       return rs.rows;
-   }),
+   },
 };
 
 module.exports = api;
