@@ -321,6 +321,9 @@ async function recursiveRequest(taskobj, dom) {
          const data = await i_adapter.logic.getRawByUrl(linkobj.href);
          if (data) continue;
       } catch(err) { }
+      if (taskobj.param?.nohash && linkobj.href.indexOf('#') >= 0) {
+         linkobj.href = linkobj.href.split('#')[0];
+      }
       await request(linkobj.href, taskobj.pr || 0, taskobj.param);
       console.log('recursive_pick', linkobj.href);
    }
