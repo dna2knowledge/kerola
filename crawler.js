@@ -79,6 +79,10 @@ async function request(url, priority, param) {
    if (!url) return;
    const reqObj = await i_adapter.logic.getReqByUrl(url);
    param = cleanupParam(param);
+   if (!param?.once?.overwrite && !param?.overwrite) {
+      if (reqObj) return;
+   }
+   if (param?.once) delete param.once;
    if (reqObj) {
       await i_adapter.logic.updateReq(reqObj.id, {
          url, param,
@@ -102,22 +106,7 @@ async function requestObj(obj, priority) {
    if (!url) return;
    const param = cleanupParam(Object.assign({}, obj));
    delete param.url;
-   const reqObj = await i_adapter.logic.getReqByUrl(url);
-   if (reqObj) {
-      await i_adapter.logic.updateReq(reqObj.id, {
-         url, param,
-         pr: priority || 0,
-         ok: 0,
-         ts: new Date().getTime(),
-      });
-   } else {
-      await i_adapter.logic.updateReq(null, {
-         url, param,
-         pr: priority || 0,
-         ok: 0,
-         ts: new Date().getTime(),
-      });
-   }
+   await request(url, priority, param);
 }
 
 async function scheduleOnce() {
