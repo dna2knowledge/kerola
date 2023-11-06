@@ -1,3 +1,4 @@
+const fs = require('fs');
 const EventEmitter = require('events').EventEmitter;
 const puppeteer = require('puppeteer');
 
@@ -45,12 +46,23 @@ function waitFor(asyncFn, max) {
    });
 }
 
+function addLaunchArgs(launchOpt, args) {
+   if (!args || !args.length) return;
+   if (!launchOpt.args) launchOpt.args = [];
+   args.forEach(z => launchOpt.args.push(z));
+}
+
 async function act(asyncFn, opt) {
   opt = Object.assign({
      needHeadless: false,
      keepAlive: false,
+     userDir: null,
+     keepUserDir: false,
   }, opt);
-  const browser = await puppeteer.launch({ headless: opt.needHeadless ? 'new' : false, });
+  const launchOpt = {};
+  launchOpt.headless = opt.needHeadless ? 'new' : false;
+  if (opt.userDir) addLaunchArgs(launchOpt, [`--user-data-dir=${opt.userDir}`])
+  const browser = await puppeteer.launch(launchOpt);
   const page = await browser.newPage();
   await asyncFn(page, browser, opt);
 
@@ -60,6 +72,8 @@ async function act(asyncFn, opt) {
   } else {
      await browser.close();
   }
+
+  if (opt.userDir && !opt.keepUserDir) fs.rmSync(opt.userDir, { recursive: true });
 }
 
 async function slient(p, needPrint) {

@@ -32,5 +32,6 @@ module.exports = {
    CR_TMP_DIR: process.env.CR_TMP_DIR || '/tmp',
    CR_QUEUE_MAX: parseInt(process.env.CR_QUEUE_MAX || '10'),
    CR_PENALTY_S: parseInt(process.env.CR_PENALTY_S || '10') /* seconds */,
+   CR_USERDIR: process.env.CR_USERDIR ? i_path.resolve(process.env.CR_USERDIR) : null,
 };
 
