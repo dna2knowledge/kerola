@@ -76,6 +76,7 @@ async function act(asyncFn, opt) {
 
   const launchOpt = {};
   launchOpt.headless = opt.needHeadless ? 'new' : false;
+  addLaunchArgs(launchOpt, [`--no-first-run`]);
   await useProxyServer(launchOpt, opt);
   if (opt.userDir) addLaunchArgs(launchOpt, [`--user-data-dir=${userDir}`]);
 
@@ -90,7 +91,7 @@ async function act(asyncFn, opt) {
      await browser.close();
   }
 
-  if (userDir && !opt.keepUserDir) fs.rmSync(opt.userDir, { recursive: true });
+  if (userDir && !opt.keepUserDir) fs.rmSync(userDir, { recursive: true });
 }
 
 async function slient(p, needPrint) {
