@@ -1,4 +1,6 @@
 const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto')
 const EventEmitter = require('events').EventEmitter;
 const puppeteer = require('puppeteer');
 
@@ -57,11 +59,15 @@ async function act(asyncFn, opt) {
      needHeadless: false,
      keepAlive: false,
      userDir: null,
+     userDirRandom: true,
      keepUserDir: false,
   }, opt);
+  // if disable userDirRandom, should keepUserDir in case parallel instance problems
+  if (!opt.userDirRandom) opt.keepUserDir = true;
+  const userDir = opt.userDir ? (opt.userDirRandom ? `${path.join(opt.userDir, crypto.randomUUID())}` : opt.userDir): null;
   const launchOpt = {};
   launchOpt.headless = opt.needHeadless ? 'new' : false;
-  if (opt.userDir) addLaunchArgs(launchOpt, [`--user-data-dir=${opt.userDir}`])
+  if (opt.userDir) addLaunchArgs(launchOpt, [`--user-data-dir=${userDir}`])
   const browser = await puppeteer.launch(launchOpt);
   const page = await browser.newPage();
   await asyncFn(page, browser, opt);
@@ -73,7 +79,7 @@ async function act(asyncFn, opt) {
      await browser.close();
   }
 
-  if (opt.userDir && !opt.keepUserDir) fs.rmSync(opt.userDir, { recursive: true });
+  if (userDir && !opt.keepUserDir) fs.rmSync(opt.userDir, { recursive: true });
 }
 
 async function slient(p, needPrint) {

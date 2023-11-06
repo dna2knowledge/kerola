@@ -4,6 +4,7 @@ const hUtil = require('../handler/util');
 const hGoogle = require('../handler/google');
 const hBing = require('../handler/bing');
 const hBaidu = require('../handler/baidu');
+const config = require('../config');
 
 const flags = {};
 
@@ -26,6 +27,7 @@ if (require.main === module) {
   flags.fromGoogle = !(
      flags.fromBaidu || flags.fromBingCN || flags.fromBing
   ) || process.argv.includes('--google');
+  flags.userDir = config.CR_USERDIR;
 
   await hUtil.act(async (page) => {
      if (flags.fromGoogle) await hGoogle.fetch(page, query, flags);

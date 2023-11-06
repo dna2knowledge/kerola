@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 
 const hGoogleMap = require('../handler/google-map');
 const hUtil = require('../handler/util');
+const config = require('../config');
 
 const flags = {};
 
@@ -16,6 +17,7 @@ if (require.main === module) {
   if (flags.needHeadless) console.error(`[I] running in headless mode ...`);
   flags.keepAlive = process.argv.includes('--keepalive');
   if (flags.keepAlive) console.error(`[I] need to close browser manually ...`);
+  flags.userDir = config.CR_USERDIR;
 
   await hUtil.act(async (page) => {
      console.error(`[I] map info`);
