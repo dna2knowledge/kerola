@@ -54,6 +54,14 @@ function addLaunchArgs(launchOpt, args) {
    args.forEach(z => launchOpt.args.push(z));
 }
 
+async function useProxyServer(launchOpt, opt) {
+   // addLaunchArgs(launchOpt, [`--proxy-server="http://localhost:3128"`])
+   // XXX currently no proxy
+   // XXX if opt.userDirRandom = false, can only use one proxy;
+   //     which means userDir different, chrome can be launched with different args
+   return;
+}
+
 async function act(asyncFn, opt) {
   opt = Object.assign({
      needHeadless: false,
@@ -65,9 +73,12 @@ async function act(asyncFn, opt) {
   // if disable userDirRandom, should keepUserDir in case parallel instance problems
   if (!opt.userDirRandom) opt.keepUserDir = true;
   const userDir = opt.userDir ? (opt.userDirRandom ? `${path.join(opt.userDir, crypto.randomUUID())}` : opt.userDir): null;
+
   const launchOpt = {};
   launchOpt.headless = opt.needHeadless ? 'new' : false;
-  if (opt.userDir) addLaunchArgs(launchOpt, [`--user-data-dir=${userDir}`])
+  await useProxyServer(launchOpt, opt);
+  if (opt.userDir) addLaunchArgs(launchOpt, [`--user-data-dir=${userDir}`]);
+
   const browser = await puppeteer.launch(launchOpt);
   const page = await browser.newPage();
   await asyncFn(page, browser, opt);
