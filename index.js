@@ -221,12 +221,20 @@ const server = createServer({
             const q = opt.json.q;
             const pr = opt.json.pr; // priority
             const memo = opt.json.memo;
+            // mode = null, "curl", "chrome", "wrapper"
+            // null / "wrapper": use chrome wrapper script
+            // curl: use curl
+            // chrome: use direct chrome + "--dump-dom" direct
+            const mode = opt.json.mode;
             const isRecursive = opt.json.nest;
             if (!q) { res.writeHead(400); return res.end(); }
             if (q.startsWith('http://') || q.startsWith('https://')) {
                (async () => {
                   try {
-                     await i_crawler.request(q, pr, { memo, recursive: isRecursive });
+                     const param = { memo, recursive: isRecursive };
+                     if (mode === 'curl') param.curl = true;
+                     else if (mode === 'chrome') param.chrome = true;
+                     await i_crawler.request(q, pr, param);
                      util.sendJson(res, { ok: 1 });
                   } catch(err) {
                      res.writeHead(500); res.end();

@@ -68,6 +68,17 @@ const env = {
 };
 
 function cleanupParam(param) {
+   // param
+   // - recursive       | recursively as long as the domain is the same
+   //                   | e.g. www.baidu.com -> www.baidu.com
+   // - recursiveGroup  | recursively as long as the root domain is the same
+   //                   | e.g. www.baidu.com -> baidu.com -> baidu.com, baike.baidu.com, zhidao.baidu.com, ...
+   // - curl            | use curl
+   // - chrome          | use direct chrome + "--dump-dom"
+   // - overwrite       | even if url exists, re-queue the url
+   // - memo            | leave comment for the request
+   // ------------------^ params persist in db
+   // - once            | { overwrite }; no mater recursively or not, populate once; no persist
    if (param) {
       Object.keys(param).forEach(k => {
          if (!param[k]) delete param[k];
