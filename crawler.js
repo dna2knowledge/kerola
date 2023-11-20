@@ -77,8 +77,9 @@ function cleanupParam(param) {
    // - chrome          | use direct chrome + "--dump-dom"
    // - overwrite       | even if url exists, re-queue the url
    // - memo            | leave comment for the request
+   // - http_new        | http and https are not the same even if host/domain+path the same
    // ------------------^ params persist in db
-   // - once            | { overwrite }; no mater recursively or not, populate once; no persist
+   // - once            | { overwrite, http_new }; no mater recursively or not, populate once; no persist
    if (param) {
       Object.keys(param).forEach(k => {
          if (!param[k]) delete param[k];
@@ -90,8 +91,18 @@ function cleanupParam(param) {
 
 async function request(url, priority, param) {
    if (!url) return;
-   const reqObj = await i_adapter.logic.getReqByUrl(url);
    param = cleanupParam(param);
+   let reqObj = await i_adapter.logic.getReqByUrl(url);
+   if (!reqObj && (param?.http_new || param?.once?.http_new)) {
+      const ps = url.split('://');
+      if (protocol === 'https') {
+         ps[0] = 'http';
+         reqObj = await i_adapter.logic.getReqByUrl(ps.join('://'));
+      } else if (protocol === 'http') {
+         ps[0] = 'https';
+         reqObj = await i_adapter.logic.getReqByUrl(ps.join('://'));
+      }
+   }
    if (!param?.once?.overwrite && !param?.overwrite) {
       if (reqObj) return;
    }
