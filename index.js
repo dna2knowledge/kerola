@@ -227,11 +227,16 @@ const server = createServer({
             // chrome: use direct chrome + "--dump-dom" direct
             const mode = opt.json.mode;
             const isRecursive = opt.json.nest;
+            const isOverwrite = opt.json.overwrite;
             if (!q) { res.writeHead(400); return res.end(); }
             if (q.startsWith('http://') || q.startsWith('https://')) {
                (async () => {
                   try {
-                     const param = { memo, recursive: isRecursive };
+                     const param = {
+                        memo,
+                        recursive: isRecursive,
+                        overwrite: isOverwrite,
+                     };
                      if (mode === 'curl') param.curl = true;
                      else if (mode === 'chrome') param.chrome = true;
                      await i_crawler.request(q, pr, param);
