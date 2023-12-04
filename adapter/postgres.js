@@ -97,9 +97,13 @@ const logic = {
          if (id) {
             const row = await api.dbget(`SELECT id, url, pr, ok, ts, param FROM ${config.index.req} WHERE id = $1`, [id]);
             await C.query(`UPDATE ${config.index.req}
-               SET pr = $1, ok = $2, ts = NOW()
-               WHERE id = $3
-            `, [obj.pr || row.pr, obj.ok || row.ok, id]);
+               SET pr = $1, ok = $2, param = $3, ts = NOW()
+               WHERE id = $4
+            `, [
+               obj.pr === undefined ? row.pr : obj.pr,
+               obj.ok === undefined ? row.ok : obj.ok,
+               obj.param === undefined ? row.param : obj.param, id
+            ]);
          } else {
             await C.query(`INSERT INTO ${config.index.req}
                (url, pr, ok, ts, param) VALUES
