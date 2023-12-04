@@ -81,7 +81,7 @@ const logic = {
          const rows = await api.dball(`SELECT
             id, url, pr, ok, ts, param FROM ${config.index.req}
             WHERE url ILIKE $1
-            ${from} LIMIT ${size}
+            OFFSET ${from} LIMIT ${size}
          `, [q]);
          return {
             total: cnt.n,
