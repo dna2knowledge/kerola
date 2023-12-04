@@ -137,14 +137,14 @@ const logic = {
    getRawByUrl: async (url, tag) => {
       try {
          const rs = await api.keyval.get(`${tag?tag:''}:${url}`);
-         return { url, raw: rs };
+         return { url, raw: JSON.parse(rs) };
       } catch(err) {
          return null;
       }
    },
    updateRaw: async (url, text, tag) => {
       try {
-         await api.keyval.put(`${tag?tag:''}:${url}`, text);
+         await api.keyval.put(`${tag?tag:''}:${url}`, JSON.stringify(text));
       } catch (err) {
          // TODO: elastic crashed
       }

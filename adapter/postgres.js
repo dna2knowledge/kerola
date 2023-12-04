@@ -118,7 +118,12 @@ const logic = {
       try {
          const row = await api.dbget(`SELECT id FROM ${config.index.req} WHERE url = $1`, [url]);
          if (!row) return null;
-         const rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = $1 AND tag = $2`, [row.id, tag || null]);
+         let rs;
+         if (!tag) {
+            rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = $1 AND tag IS NULL`, [row.id]);
+         } else {
+            rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = $1 AND tag = $2`, [row.id, tag]);
+         }
          if (!rs) return null;
          return { url, raw: rs };
       } catch(err) {
@@ -135,12 +140,12 @@ const logic = {
             await C.query(`UPDATE ${config.index.raw}
                SET dom = $1, ok = $2, ts = NOW()
                WHERE id = $3 AND tag = $4
-            `, [json.dom, json.ok, row.id, tag]);
+            `, [json.dom, json.ok, row.id, tag || null]);
          } else {
             await C.query(`INSERT INTO ${config.index.raw}
                (id, tag, dom, ok, ts) VALUES
                ($1,   $2,  $3,  $4, NOW())
-            `, [row.id, tag, json.dom, json.ok]);
+            `, [row.id, tag || null, json.dom, json.ok]);
          }
       } catch (err) {
          // TODO: handle err

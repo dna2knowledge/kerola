@@ -303,8 +303,8 @@ const server = createServer({
             if (!url) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const item = JSON.parse((await i_adapter.logic.getRawByUrl(url)).raw);
-                  util.sendJson(res, item);
+                  const item = await i_adapter.logic.getRawByUrl(url);
+                  util.sendJson(res, Object.assign({ url: item?.url }, item?.raw));
                } catch (err) {
                   res.writeHead(500); res.end();
                }
@@ -317,11 +317,11 @@ const server = createServer({
             if (!url) { res.writeHead(400); return res.end(); }
             (async () => {
                try {
-                  const item = JSON.parse(await i_adapter.logic.getRawByUrl(url, tag));
+                  const item = await i_adapter.logic.getRawByUrl(url, tag);
                   if (item && item.raw && extracted) {
                      item.raw.extracted = i_pagelink.extractBasicInfo(item.raw.dom, item.url);
                   }
-                  util.sendJson(res, Object.assign({ url: item.url }, item.raw));
+                  util.sendJson(res, Object.assign({ url: item?.url }, item?.raw));
                } catch (err) {
                   res.writeHead(500); res.end();
                }
