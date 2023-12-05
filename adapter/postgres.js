@@ -119,10 +119,10 @@ const logic = {
          const row = await api.dbget(`SELECT id FROM ${config.index.req} WHERE url = $1`, [url]);
          if (!row) return null;
          let rs;
-         if (!tag) {
-            rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = $1 AND tag IS NULL`, [row.id]);
-         } else {
+         if (tag) {
             rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = $1 AND tag = $2`, [row.id, tag]);
+         } else {
+            rs = await api.dbget(`SELECT ts, ok, dom FROM ${config.index.raw} WHERE id = $1 AND tag IS NULL`, [row.id]);
          }
          if (!rs) return null;
          return { url, raw: rs };
@@ -135,12 +135,24 @@ const logic = {
          const json = JSON.parse(text);
          const row = await api.dbget(`SELECT id FROM ${config.index.req} WHERE url = $1`, [url]);
          if (!row) return;
-         const rs = await api.dbget(`SELECT id, tag FROM ${config.index.raw} WHERE id = $1 AND tag = $2`, [row.id, tag || null]);
+         let rs;
+         if (tag) {
+            rs = await api.dbget(`SELECT id, tag FROM ${config.index.raw} WHERE id = $1 AND tag = $2`, [row.id, tag || null]);
+         } else {
+            rs = await api.dbget(`SELECT id, tag FROM ${config.index.raw} WHERE id = $1 AND tag IS NULL`, [row.id]);
+         }
          if (rs) {
-            await C.query(`UPDATE ${config.index.raw}
-               SET dom = $1, ok = $2, ts = NOW()
-               WHERE id = $3 AND tag = $4
-            `, [json.dom, json.ok, row.id, tag || null]);
+            if (tag) {
+               await C.query(`UPDATE ${config.index.raw}
+                  SET dom = $1, ok = $2, ts = NOW()
+                  WHERE id = $3 AND tag = $4
+               `, [json.dom, json.ok, row.id, tag || null]);
+            } else {
+               await C.query(`UPDATE ${config.index.raw}
+                  SET dom = $1, ok = $2, ts = NOW()
+                  WHERE id = $3 AND tag IS NULL
+               `, [json.dom, json.ok, row.id]);
+            }
          } else {
             await C.query(`INSERT INTO ${config.index.raw}
                (id, tag, dom, ok, ts) VALUES
