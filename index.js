@@ -228,6 +228,7 @@ const server = createServer({
             const mode = opt.json.mode;
             const isRecursive = opt.json.nest;
             const isOverwrite = opt.json.overwrite;
+            const timeoutMs = opt.json.timeout;
             if (!q) { res.writeHead(400); return res.end(); }
             if (q.startsWith('http://') || q.startsWith('https://')) {
                (async () => {
@@ -239,6 +240,10 @@ const server = createServer({
                      if (mode === 'curl') param.curl = true;
                      else if (mode === 'chrome') param.chrome = true;
                      if (isOverwrite) param.once = Object.assign({ overwrite: true }, param.once);
+                     if (timeoutMs) {
+                        param.timeout = parseInt(timeoutMs);
+                        if (isNaN(param.timeout) || param.timeout <= 0) delete param.timeout;
+                     }
                      await i_crawler.request(q, pr, param);
                      util.sendJson(res, { ok: 1 });
                   } catch(err) {

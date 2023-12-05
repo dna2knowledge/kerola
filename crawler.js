@@ -76,6 +76,7 @@ function cleanupParam(param) {
    // - curl            | use curl
    // - chrome          | use direct chrome + "--dump-dom"
    // - overwrite       | even if url exists, re-queue the url
+   // - timeout         | set crawler command timeout instead of default 60s
    // - memo            | leave comment for the request
    // - http_new        | http and https are not the same even if host/domain+path the same
    // ------------------^ params persist in db
@@ -220,7 +221,8 @@ async function act() {
    try {
       const cmd = await buildCmd(task);
       const outF = i_path.join(env.tmpDir, `${task.id}.out`);
-      const code = await run(cmd[0], cmd.slice(1), { stdout: outF, timeout: 60 * 1000 });
+      const timeoutMs = parseInt(task.param?.timeout) || (60 * 1000);
+      const code = await run(cmd[0], cmd.slice(1), { stdout: outF, timeout: timeoutMs });
       if (code) throw 'abnormal-exit';
       delete env.queueMap[task.url];
       await i_adapter.logic.updateReq(task.id, Object.assign(taskobj, {
