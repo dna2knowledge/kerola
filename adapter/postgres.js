@@ -80,7 +80,7 @@ const logic = {
          `, [q]);
          const rows = await api.dball(`SELECT
             id, url, pr, ok, ts, param FROM ${config.index.req}
-            WHERE url ILIKE $1
+            WHERE url ILIKE $1 ORDER BY ts DESC, pr DESC, ok DESC
             OFFSET ${from} LIMIT ${size}
          `, [q]);
          return {
