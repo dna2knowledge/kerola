@@ -235,10 +235,10 @@ const server = createServer({
                      const param = {
                         memo,
                         recursive: isRecursive,
-                        overwrite: isOverwrite,
                      };
                      if (mode === 'curl') param.curl = true;
                      else if (mode === 'chrome') param.chrome = true;
+                     if (isOverwrite) param.once = Object.assign({ overwrite: true }, param.once);
                      await i_crawler.request(q, pr, param);
                      util.sendJson(res, { ok: 1 });
                   } catch(err) {
