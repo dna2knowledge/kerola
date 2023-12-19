@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto')
 const EventEmitter = require('events').EventEmitter;
 const puppeteer = require('puppeteer');
+const playwright = require('playwright');
 
 function buildQueryObject(query) {
    const obj = {};
@@ -25,6 +26,18 @@ function waitUntilBrowserClose(browser) {
       }
    });
 }
+
+function waitUntilPwPageClose(page) {
+   return new Promise((r) => {
+      wait(page, r);
+
+      function wait(page, rx) {
+         if (!page || page.isClosed()) return rx();
+         setTimeout(wait, 1000, page, rx);
+      }
+   });
+}
+
 
 function wait(ms) {
    return new Promise((r) => {
@@ -94,6 +107,32 @@ async function act(asyncFn, opt) {
   if (userDir && !opt.keepUserDir) fs.rmSync(userDir, { recursive: true });
 }
 
+async function actPlaywright(asyncFn, opt) {
+  opt = Object.assign({
+     browser: 'firefox',
+     needHeadless: false,
+     keepAlive: false,
+     userDir: null,
+     userDirRandom: true,
+     keepUserDir: false,
+  }, opt);
+
+  const browserType = opt.browser === 'firefox' ? playwright.firefox : (
+     opt.browser === 'chrome' ? playwright.chromium : playwright.webkit
+  );
+  const browser = await browserType.launch({ headless: opt.needHeadless });
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  await asyncFn(page, browser, opt);
+
+  if (opt.keepAlive) {
+     await waitUntilPwPageClose(page);
+  }
+  await context.close();
+  await browser.close();
+}
+
 async function slient(p, needPrint) {
    try { await p; } catch(err) { if (needPrint) console.log(`[E] ${err.message}`); }
 }
@@ -120,6 +159,7 @@ async function hookOnRequest(page, emitter) {
 
 module.exports = {
    act,
+   actPlaywright,
    slient,
    wait,
    waitFor,
