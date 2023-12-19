@@ -1,4 +1,4 @@
-const i_db = require('../adapter/postgres');
+const i_db = require('../../../adapter/postgres');
 
 async function main() {
    await i_db.createTables();

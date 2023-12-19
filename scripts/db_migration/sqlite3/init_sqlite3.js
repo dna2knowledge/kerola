@@ -1,4 +1,4 @@
-const i_db = require('../adapter/sqlite3');
+const i_db = require('../../../adapter/sqlite3');
 
 async function main() {
    await i_db.createTables();
