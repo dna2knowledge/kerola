@@ -10,6 +10,11 @@ if (require.main === module) {
   console.error(`[I] fetch "${url}" ...`);
 
   flags.needPlaywright = process.argv.includes('--playwright');
+  if (flags.needPlaywright) {
+     flags.browser = process.argv.includes('--chrome') ? 'chrome' : (
+        process.argv.includes('--webkit') ? 'webkit' : 'firefox'
+     );
+  }
   flags.needExtract = process.argv.includes('--extract');
   flags.needHeadless = process.argv.includes('--headless');
   if (flags.needHeadless) console.error(`[I] running in headless mode ...`);
@@ -19,7 +24,7 @@ if (require.main === module) {
 
   if (flags.needPlaywright) {
      await hUtil.actPlaywright(async (page) => {
-        console.error(`[I] generic (playwright)`);
+        console.error(`[I] generic (playwright - ${flags.browser})`);
         await page.setViewportSize({width: 1080, height: 1024});
         await page.goto(url);
         await hUtil.slient(page.waitForLoadState('networkidle', { timeout: 5000 }));
