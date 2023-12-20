@@ -75,6 +75,9 @@ function cleanupParam(param) {
    //                   | e.g. www.baidu.com -> baidu.com -> baidu.com, baike.baidu.com, zhidao.baidu.com, ...
    // - curl            | use curl
    // - chrome          | use direct chrome + "--dump-dom"
+   // - puppeteer       | use puppeteer + chrome
+   // - webkit          | use playwright + webkit
+   // - chromium        | use playwright + chromium
    // - overwrite       | even if url exists, re-queue the url
    // - timeout         | set crawler command timeout instead of default 60s
    // - memo            | leave comment for the request

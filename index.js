@@ -238,7 +238,10 @@ const server = createServer({
                         recursive: isRecursive,
                      };
                      if (mode === 'curl') param.curl = true;
-                     else if (mode === 'chrome') param.chrome = true;
+                     else if (mode === 'chrome') param.chromium = true;
+                     else if (mode === 'puppeteer') param.puppeteer = true;
+                     else if (mode === 'webkit') param.webkit = true;
+                     // else mode = 'firefox'
                      if (isOverwrite) param.once = Object.assign({ overwrite: true }, param.once);
                      if (timeoutMs) {
                         param.timeout = parseInt(timeoutMs);
@@ -253,8 +256,8 @@ const server = createServer({
             } else if (q.startsWith('bing://') || q.startsWith('google://') || q.startsWith('baidu://') || q.startsWith('bingcn://')) {
                (async () => {
                   try {
-                     // should not do recursively
-                     await i_crawler.request(q, pr, { memo });
+                     // should not do recursively; currently it only has uppeteer impl
+                     await i_crawler.request(q, pr, { memo, puppeteer: true });
                      util.sendJson(res, { ok: 1 });
                   } catch(err) {
                      res.writeHead(500); res.end();
