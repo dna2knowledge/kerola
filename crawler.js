@@ -335,7 +335,7 @@ function getRootHost(host) {
 async function recursiveRequest(taskobj, dom) {
    // recursive: crawl recursively with the same host (e.g. sub.root.region:8080)
    // recursiveGroup: crawl recursively with the same root host (e.g. root.region)
-   if (!taskobj || !(taskobj.param?.recursive || task.obj.param?.extract)) return;
+   if (!taskobj || !(taskobj.param?.recursive || taskobj.param?.extract)) return;
    const url = taskobj.url;
    console.log('recursive/extract', url);
    const ps = url.split('/');
