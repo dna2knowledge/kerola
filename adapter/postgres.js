@@ -108,7 +108,7 @@ const logic = {
             await C.query(`INSERT INTO ${config.index.req}
                (url, pr, ok, ts, param) VALUES
                ($1,   $2,  $3,  NOW(),  $4)
-            `, [obj.url, obj.pr || 0, 0, obj.param ? JSON.stringify(obj.param) : null]);
+            `, [obj.url, obj.pr || 0, obj.ok || 0, obj.param ? JSON.stringify(obj.param) : null]);
          }
       } catch(err) {
          // TODO: handle err

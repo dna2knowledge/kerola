@@ -348,27 +348,28 @@ async function recursiveRequest(taskobj, dom) {
    const host = taskobj.param?.recursiveGroup ? getRootHost(domain) : domain;
    const hrefs = distinctHrefs(compileHrefs(doc.querySelectorAll('a'), url)).filter(z => {
       const link = z.href;
-      if (matchFn && matchFn && matchFn(z.href, host)) return true;
+      if (matchFn && matchFn(link, host)) return true;
       if (!taskobj.param?.extract) return false;
       // apply "extract"
       if (taskobj.param?.nohash && linkobj.href.indexOf('#') >= 0) {
-         z.href = z.href.split('#')[0];
+         z.href = link.split('#')[0];
       }
       (async () => {
-         const reqObj = await i_adapter.logic.getReqByUrl(url);
+         const reqObj = await i_adapter.logic.getReqByUrl(z.href);
          if (reqObj) return;
-         const param_next = Object({}, task.param);
+         const param_next = Object.assign({}, taskobj.param);
          // a to-be-reviewed req should not have recursive and once param
          // but maybe in future, we can move recursive nested into once
          delete param_next.recursiveGroup;
          delete param_next.recursive;
          delete param_next.once;
          await i_adapter.logic.updateReq(null, {
-            url, param,
-            pr: priority || 0,
+            url: z.href, param: param_next,
+            pr: taskobj.pr|| 0,
             ok: req_ok_review_signal,
             ts: new Date().getTime(),
          });
+         console.log('extract_pick', z.href);
       })();
       return false;
    });
