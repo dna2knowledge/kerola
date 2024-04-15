@@ -354,20 +354,22 @@ async function recursiveRequest(taskobj, dom) {
       if (taskobj.param?.nohash && linkobj.href.indexOf('#') >= 0) {
          z.href = z.href.split('#')[0];
       }
-      const reqObj = await i_adapter.logic.getReqByUrl(url);
-      if (reqObj) return;
-      const param_next = Object({}, task.param);
-      // a to-be-reviewed req should not have recursive and once param
-      // but maybe in future, we can move recursive nested into once
-      delete param_next.recursiveGroup;
-      delete param_next.recursive;
-      delete param_next.once;
-      await i_adapter.logic.updateReq(null, {
-         url, param,
-         pr: priority || 0,
-         ok: req_ok_review_signal,
-         ts: new Date().getTime(),
-      });
+      (async () => {
+         const reqObj = await i_adapter.logic.getReqByUrl(url);
+         if (reqObj) return;
+         const param_next = Object({}, task.param);
+         // a to-be-reviewed req should not have recursive and once param
+         // but maybe in future, we can move recursive nested into once
+         delete param_next.recursiveGroup;
+         delete param_next.recursive;
+         delete param_next.once;
+         await i_adapter.logic.updateReq(null, {
+            url, param,
+            pr: priority || 0,
+            ok: req_ok_review_signal,
+            ts: new Date().getTime(),
+         });
+      })();
       return false;
    });
    for(let i = 0; i < hrefs.length; i++) {
