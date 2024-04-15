@@ -227,6 +227,7 @@ const server = createServer({
             // chrome: use direct chrome + "--dump-dom" direct
             const mode = opt.json.mode;
             const isRecursive = opt.json.nest;
+            const isExtract = opt.json.extract;
             const isOverwrite = opt.json.overwrite;
             const timeoutMs = opt.json.timeout;
             if (!q) { res.writeHead(400); return res.end(); }
@@ -235,7 +236,8 @@ const server = createServer({
                   try {
                      const param = {
                         memo,
-                        recursive: isRecursive,
+                        recursive: !!isRecursive,
+                        extract: !!isExtract,
                      };
                      if (mode === 'curl') param.curl = true;
                      else if (mode === 'chrome') param.chromium = true;

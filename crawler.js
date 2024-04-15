@@ -5,6 +5,9 @@ const i_sp = require('child_process').spawn;
 const i_adapter = require('./adapter/index');
 const i_config = require('./config');
 
+// req ok control value start from 1000
+const req_ok_review_signal = 1000;
+
 function run(cmd, args, opt) {
    return new Promise((r, e) => {
       opt = opt || {};
@@ -73,18 +76,23 @@ function cleanupParam(param) {
    //                   | e.g. www.baidu.com -> www.baidu.com
    // - recursiveGroup  | recursively as long as the root domain is the same
    //                   | e.g. www.baidu.com -> baidu.com -> baidu.com, baike.baidu.com, zhidao.baidu.com, ...
+   //                   |
    // - curl            | use curl
    // - chrome          | use direct chrome + "--dump-dom"
+   // - chromium        | use playwright + chromium
    // - puppeteer       | use puppeteer + chrome
    // - webkit          | use playwright + webkit
-   // - chromium        | use playwright + chromium
+   //                   |
+   // - extract         | after crawling, extract links from dom and add to kerola_req
+   //                   | e.g. www.baidu.com -> www.baidu.com (ok=1) -> image.baidu.com (ok=1000), zhidao.baidu.com (ok=1000)
+   // - http_new        | http and https are not the same even if host/domain+path the same
+   // - memo            | leave comment for the request
    // - overwrite       | even if url exists, re-queue the url
    // - timeout         | set crawler command timeout instead of default 60s
-   // - memo            | leave comment for the request
-   // - http_new        | http and https are not the same even if host/domain+path the same
    // ------------------^ params persist in db
    // - once            | { overwrite, http_new }; no mater recursively or not, populate once; no persist
    if (param) {
+      param = Object.assign({}, param);
       Object.keys(param).forEach(k => {
          if (!param[k]) delete param[k];
       });
@@ -108,7 +116,7 @@ async function request(url, priority, param) {
       }
    }
    if (!param?.once?.overwrite && !param?.overwrite) {
-      if (reqObj) return;
+      if (reqObj && reqObj.ok < req_ok_review_signal) return;
    }
    if (param?.once) delete param.once;
    if (reqObj) {
@@ -241,7 +249,7 @@ async function act() {
          ts: new Date().getTime(),
       }));
       // async run, no wait
-      if (task.param?.recursive) recursiveRequest(taskobj, dom);
+      if (task.param?.recursive || task.param?.extract) recursiveRequest(taskobj, dom);
    } catch(err) {
       delete env.queueMap[task.url];
       await i_adapter.logic.updateReq(task.id, Object.assign(taskobj, {
@@ -327,22 +335,43 @@ function getRootHost(host) {
 async function recursiveRequest(taskobj, dom) {
    // recursive: crawl recursively with the same host (e.g. sub.root.region:8080)
    // recursiveGroup: crawl recursively with the same root host (e.g. root.region)
-   if (!taskobj || !taskobj.param?.recursive) return;
+   if (!taskobj || !(taskobj.param?.recursive || task.obj.param?.extract)) return;
    const url = taskobj.url;
-   console.log('recursive', url);
+   console.log('recursive/extract', url);
    const ps = url.split('/');
    const protocol = ps[0];
    if (protocol !== 'http:' && protocol !== 'https:') return;
    const domain = ps[2]; // abc.def:1234
    const html = new jsdom.JSDOM(dom);
    const doc = html.window.document;
-   const matchFn = taskobj.param?.recursiveGroup ? matchRootHost : matchHost;
+   const matchFn = taskobj.param?.recursiveGroup ? matchRootHost : (taskobj.param?.recursive ? matchHost : null);
    const host = taskobj.param?.recursiveGroup ? getRootHost(domain) : domain;
    const hrefs = distinctHrefs(compileHrefs(doc.querySelectorAll('a'), url)).filter(z => {
       const link = z.href;
-      return matchFn(z.href, host);
+      if (matchFn && matchFn && matchFn(z.href, host)) return true;
+      if (!taskobj.param?.extract) return false;
+      // apply "extract"
+      if (taskobj.param?.nohash && linkobj.href.indexOf('#') >= 0) {
+         z.href = z.href.split('#')[0];
+      }
+      const reqObj = await i_adapter.logic.getReqByUrl(url);
+      if (reqObj) return;
+      const param_next = Object({}, task.param);
+      // a to-be-reviewed req should not have recursive and once param
+      // but maybe in future, we can move recursive nested into once
+      delete param_next.recursiveGroup;
+      delete param_next.recursive;
+      delete param_next.once;
+      await i_adapter.logic.updateReq(null, {
+         url, param,
+         pr: priority || 0,
+         ok: req_ok_review_signal,
+         ts: new Date().getTime(),
+      });
+      return false;
    });
    for(let i = 0; i < hrefs.length; i++) {
+      // apply "recursive" / "recursiveGroup"
       const linkobj = hrefs[i];
       try {
          const data = await i_adapter.logic.getRawByUrl(linkobj.href);
