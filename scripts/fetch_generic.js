@@ -35,7 +35,7 @@ if (require.main === module) {
         }
      }, flags);
   } else {
-     await hUtil.actPlaywright(async (page) => {
+     await hUtil.act(async (page) => {
         console.error(`[I] generic`);
         await page.goto(url);
         await page.setViewport({width: 1080, height: 1024});
